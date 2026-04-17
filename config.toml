@@ -1,0 +1,7 @@
+[cosmic-ray]
+module-path = "function.py"
+python-version = "3.13.2" 
+test-command = "python -m unittest black_box_tests.py white_box_tests.py"
+timeout = 20.0  
+[cosmic-ray.distributor]
+name = "local"
