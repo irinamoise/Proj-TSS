@@ -1,18 +1,21 @@
-# **Testare unitara in Python**
+# Testare Unitara in Python
 
 ## Descriere
+
 Aplicatia reprezinta un sistem de monitorizare a temperaturilor inregistrate de senzorii a 6 frigidere, determinand daca acestea sunt critice sau nu, in functie de un prag de alerta specificat. Sistemul verifica daca numarul de temperaturi este corect, daca pragul de alerta este valid si daca valorile temperaturilor sunt in intervalul permis: [-150, 0] grade.
 Daca toate conditiile sunt indeplinite, se returneaza media temperaturilor si numarul de valori critice (temperaturi care depasesc pragul de alerta).
 
+## Specificație
 
-## Specificatiile programului
+Serviciul ar trebui:
+* Sa returneze mereu o valoare valida.
+* Sa arunce o eroare in cazuri invalide.
+* Numarul de temperaturi trebuie sa fie exact 6.
+* Pragul de alerta trebuie sa fie mai mic sau egal cu -50.
+* Valorile temperaturilor trebuie sa fie in intervalul [-150, 0].
+* Temperaturile critice sunt cele care depasesc pragul de alerta.
 
-* aadffv
-* defgbb
-* hhmjmm
-
-
-## Configuratie hardware
+## Configuratie Hardware
 
 | Componenta | Descriere |
 | :---: | :---: |
@@ -22,345 +25,426 @@ Daca toate conditiile sunt indeplinite, se returneaza media temperaturilor si nu
 | GPU | Intel (R) UHD Graphics 620 |
 | OS | Windows 10 |
 
-
-
 ## Configuratie Software
 
 | Componenta | Descriere |
 | :---: | :---: |
-| Limbaj |	Python 3.13.11 |
+| Limbaj | Python 3.13.11 |
 | IDE | Visual Studio Code |
-| Unit Testing |  |
-| Version Control |	Git |
-
-
+| Unit Testing | unittest |
+| Version Control | Git |
 
 ## Demo
 
+[![Demo](https://img.youtube.com/vi/placeholder/0.jpg)](https://www.youtube.com/watch?v=placeholder)
 
-## Testare Functionala
+## Functional Testing
+
+Functional testing este o metoda de testare software care se concentreaza pe validarea functionalitatilor unui sistem, asigurandu-se ca acestea corespund specificatiilor si cerintelor definite.
 
 ### 1. Partitionare in clase de echivalenta
 
+Domeniul intrarilor:
+* temperatures $\rightarrow$ lista de valori reale, exact 6 elemente, fiecare in intervalul [-150, 0]. Astfel, avem clase de echivalenta pentru lungime si valori.
+* alert_threshold $\rightarrow$ valoare reala mai mica sau egala cu -50. Astfel, avem 2 clase de echivalenta:
+    - $A_1$ = $(-\infty, -50]$.
+    - $A_2$ = $(-50, +\infty)$.
 
-Pentru fiecare clasa, se selecteaza un caz reprezentativ, cu presupunerea ca toate valorile din aceeasi clasa vor produce acelasi tip de rezultat.
+Domeniul iesirilor:
+Se returneaza un tuplu (media, numar_critic) daca datele sunt corecte, altfel se returneaza un mesaj de eroare sub forma unui string.
 
-Se disting urmatoarele clase:
+Clasele de echivalenta globale astfel obtinute sunt:
+* $Eq_1 = \lbrace (t, a) | len(t) \neq 6 \rbrace$.
+    - $T_1 = ([valori], a)$.
+* $Eq_2 = \lbrace (t, a) | a > -50 \rbrace$.
+    - $T_2 = (t, -40)$.
+* $Eq_3 = \lbrace (t, a) | len(t) = 6, a \leq -50, \exists t_i \notin [-150, 0] \rbrace$.
+    - $T_3 = ([-160, ...], -55)$.
+* $Eq_4 = \lbrace (t, a) | len(t) = 6, a \leq -50, \forall t_i \in [-150, 0] \rbrace$.
+    - $T_4 = ([-80, -60, -70, -80, -90, -100], -72)$.
 
-#### Lungimea listei de temperaturi
-
-* **L1**: lungime valida (**exact 6 elemente**)
-* **L2**: lungime prea mica (**< 6 elemente**) → mesaj de eroare
-* **L3**: lungime prea mare (**> 6 elemente**) → mesaj de eroare
-
-Clasele **L2 si L3** produc acelasi mesaj de eroare, dar sunt pastrate separat deoarece provin din **subdomenii distincte ale spatiului de intrare**.
-
-#### Pragul de alerta
-
-* **A1**: prag valid (**<= -50**)
-* **A2**: prag invalid (**> -50**) → mesaj de eroare
-
-#### Valorile temperaturilor
-
-* **T1**: toate temperaturile valide (**-150 <= t <= 0**)
-* **T2**: exista cel putin o temperatura prea mica (**t < -150**) → eroare senzor
-* **T3**: exista cel putin o temperatura prea mare (**t > 0**) → eroare senzor
-
----
-
-#### Strategia de alegere a testelor
-
-Conform principiului partitionarii in clase de echivalenta, este suficient sa alegem:
-
-* **cel putin un caz reprezentativ pentru fiecare clasa valida**
-* **cel putin un caz reprezentativ pentru fiecare clasa invalida**
-
----
-
-#### Cazuri de test derivate
-
-| ID Test | Clase acoperite | Intrare               | Rezultat asteptat    |
-| ------- | --------------- | --------------------- | -------------------- |
-| TST1    | L1, A1, T1      | 6 temperaturi valide  | media + numar critic |
-| TST2    | L2              | 5 temperaturi         | eroare lungime       |
-| TST3    | L3              | 7 temperaturi         | eroare lungime       |
-| TST4    | L1, A2          | prag invalid          | eroare prag          |
-| TST5    | L1, A1, T2      | o temperatura < -150 | `Sensor failure!`    |
-| TST6    | L1, A1, T3      | o temperatura > 0    | `Sensor failure!`    |
-| TST7    | L1, A1, T1      | niciuna critica       | contor = 0           |
-| TST8    | L1, A1, T1      | toate critice         | contor = 6           |
-
----
-
-#### Implementarea testelor în Python
+| Intrari (t, a) | Expected |
+| :---------: | :-----------: |
+| $([valori], a)$ | "Exactly 6 temperature readings are required" |
+| $(t, -40)$ | "Alert threshold must be less than or equal to -50" |
+| $([-160, ...], -55)$ | "Sensor failure!" |
+| $([-80, -60, -70, -80, -90, -100], -72)$ | (-80.0, 2) |
 
 ```python
 def test_equivalence_partitioning(self):
-    # L1, A1, T1 - test valid
-    self.assertEqual(
-        analyze_status([-80, -60, -70, -80, -90, -100], -72),
-        (-80.0, 2)
-    )
+    /* Testul T1. */
+    var result = analyze_status([1,2,3,4,5], -55);
+    Assert.Equal("Exactly 6 temperature readings are required", result);
 
-    # L2 - lungime prea mica
-    self.assertEqual(
-        analyze_status([-60] * 5, -55),
-        "Exactly 6 temperature readings are required"
-    )
+    /* Testul T2. */
+    result = analyze_status([-60]*6, -40);
+    Assert.Equal("Alert threshold must be less than or equal to -50", result);
 
-    # L3 - lungime prea mare
-    self.assertEqual(
-        analyze_status([-60] * 7, -55),
-        "Exactly 6 temperature readings are required"
-    )
+    /* Testul T3. */
+    result = analyze_status([-160, -55, -70, -80, -90, -100], -55);
+    Assert.Equal("Sensor failure!", result);
 
-    # L1, A2 - prag invalid
-    self.assertEqual(
-        analyze_status([-60] * 6, -40),
-        "Alert threshold must be less than or equal to -50"
-    )
-
-    # L1, A1, T2 - temperatura prea mica
-    self.assertEqual(
-        analyze_status([-160, -55, -70, -80, -90, -100], -55),
-        "Sensor failure!"
-    )
-
-    # L1, A1, T3 - temperatura prea mare
-    self.assertEqual(
-        analyze_status([-60, 10, -70, -80, -90, -100], -55),
-        "Sensor failure!"
-    )
-
-    # L1, A1, T1 - nicio temperatura critica
-    self.assertEqual(
-        analyze_status([-60] * 6, -55),
-        (-60.0, 0)
-    )
-
-    # L1, A1, T1 - toate temperaturile critice
-    self.assertEqual(
-        analyze_status([-60] * 6, -70),
-        (-60.0, 6)
-    )
+    /* Testul T4. */
+    var (average, critical) = analyze_status([-80, -60, -70, -80, -90, -100], -72);
+    Assert.Equal(-80.0, average);
+    Assert.Equal(2, critical);
+}
 ```
-
----
 
 ### 2. Analiza valorilor de frontiera
 
-Analiza valorilor de frontiera este o tehnica de testare care se concentreaza pe testarea valorilor limita ale domeniului de intrare. Aceasta este importanta deoarece erorile sunt adesea gasite la limitele intervalelor.
+Valorile de frontiera pentru clasa lungimii listei sunt:
+- $L_1 \rightarrow 5, 7$.
+- $L_2 \rightarrow 6$.
 
-Se identifica urmatoarele frontiere:
+Valorile de frontiera pentru clasa pragului de alerta sunt:
+- $A_1 \rightarrow -50 - \epsilon, -50$.
+- $A_2 \rightarrow -50 + \epsilon$.
 
-#### Lungimea listei de temperaturi
-- Frontiera inferioara: 5 elemente (invalid)
-- Valoarea valida: 6 elemente
-- Frontiera superioara: 7 elemente (invalid)
+Valorile de frontiera pentru clasa temperaturilor sunt:
+- $T_1 \rightarrow -150 - \epsilon, -150, -150 + \epsilon$.
+- $T_2 \rightarrow -\epsilon, 0, +\epsilon$.
 
-#### Pragul de alerta
-- Frontiera inferioara: -51 (valid)
-- Valoarea limita: -50 (valid)
-- Frontiera superioara: -49 (invalid)
+Astfel, avem urmatoarele teste:
+* $Eq_1 \rightarrow (lungime \neq 6)$.
+* $Eq_2 \rightarrow (prag > -50)$.
+* $Eq_3 \rightarrow (temperaturi invalide)$.
+* $Eq_4 \rightarrow (valori valide)$.
 
-#### Valorile temperaturilor
-- Frontiera inferioara a intervalului: -151 (invalid), -150 (valid), -149 (valid)
-- Frontiera superioara a intervalului: -1 (valid), 0 (valid), 1 (invalid)
-
----
-
-#### Cazuri de test pentru analiza valorilor de frontiera
-
-| ID Test | Frontiera testata | Intrare | Rezultat asteptat |
-| ------- | ----------------- | ------- | ----------------- |
-| BVA1    | Lungime < 6      | 5 temperaturi | eroare lungime |
-| BVA2    | Lungime = 6      | 6 temperaturi | media + numar critic |
-| BVA3    | Lungime > 6      | 7 temperaturi | eroare lungime |
-| BVA4    | Prag = -51       | prag -51 | valid |
-| BVA5    | Prag = -50       | prag -50 | valid |
-| BVA6    | Prag = -49       | prag -49 | eroare prag |
-| BVA7    | Temp = -151      | o temp -151 | eroare senzor |
-| BVA8    | Temp = -150      | o temp -150 | valid |
-| BVA9    | Temp = -149      | o temp -149 | valid |
-| BVA10   | Temp = -1        | o temp -1 | valid |
-| BVA11   | Temp = 0         | o temp 0 | valid |
-| BVA12   | Temp = 1         | o temp 1 | eroare senzor |
-
----
-
-#### Implementarea testelor pentru analiza valorilor de frontiera în Python
+| Intrari (t, a) | Expected |
+| :---------: | :-----------: |
+| (5 temperaturi, -55) | "Exactly 6 temperature readings are required" |
+| (6 temperaturi, -55) | (-60.0, 0) |
+| (7 temperaturi, -55) | "Exactly 6 temperature readings are required" |
+| (6 temperaturi, -50 - \epsilon) | (-60.0, 0) |
+| (6 temperaturi, -50) | (-60.0, 0) |
+| $(6 temperaturi, -50 + \epsilon)$ | "Alert threshold must be less than or equal to -50" |
+| $(-150 - \epsilon, ...)$ | "Sensor failure!" |
+| $(-150, ...)$ | (-91.67, 0) |
+| $(-150 + \epsilon, ...)$ | (-91.67, 0) |
+| $(-\epsilon, ...)$ | (-66.83, 1) |
+| $(0, ...)$ | (-66.67, 1) |
+| $(+\epsilon, ...)$ | "Sensor failure!" |
 
 ```python
 def test_boundary_values(self):
-    # Frontiere lungimea listei
-    # Lungime la frontiera inferioara (5 elem)
-    self.assertEqual(
-        analyze_status([-60] * 5, -55),
-        "Exactly 6 temperature readings are required"
-    )
-    # Lungime la frontiera valida (6 elem)
-    self.assertEqual(
-        analyze_status([-60] * 6, -55),
-        (-60.0, 0)
-    )
-    # Lungime la frontiera superioara (7 elem)
-    self.assertEqual(
-        analyze_status([-60] * 7, -55),
-        "Exactly 6 temperature readings are required"
-    )
+    /* Test pentru lungime 5 */
+    var result = analyze_status([-60]*5, -55);
+    Assert.Equal("Exactly 6 temperature readings are required", result);
 
-    # Frontiere prag de alerta
-    # Prag la frontiera inferioara (-51)
-    self.assertEqual(
-        analyze_status([-60] * 6, -51),
-        (-60.0, 0)
-    )
-    # Prag la frontiera valida (-50)
-    self.assertEqual(
-        analyze_status([-60] * 6, -50),
-        (-60.0, 0)
-    )
-    # Prag la frontiera superioara (-49)
-    self.assertEqual(
-        analyze_status([-60] * 6, -49),
-        "Alert threshold must be less than or equal to -50"
-    )
+    /* Test pentru lungime 6 */
+    var (average, critical) = analyze_status([-60]*6, -55);
+    Assert.Equal(-60.0, average);
+    Assert.Equal(0, critical);
 
-    # Frontiere valori temperaturi
-    # Inceputul intervalului - temp la frontiera inferioara (-151)
-    self.assertEqual(
-        analyze_status([-151, -60, -70, -80, -90, -100], -55),
-        "Sensor failure!"
-    )
-    # Inceputul intervalului - temp la frontiera valida (-150)
-    self.assertEqual(
-        analyze_status([-150, -60, -70, -80, -90, -100], -55),
-        (-91.67, 0)
-    )
-    # Inceputul intervalului - temp la frontiera superioara (-149)
-    self.assertEqual(
-        analyze_status([-149, -60, -70, -80, -90, -100], -55),
-        (-91.5, 0)
-    )
-    # Sfarsitul intervalului - temp la frontiera inferioara (-1)
-    self.assertEqual(
-        analyze_status([-1, -60, -70, -80, -90, -100], -55),
-        (-66.83, 1)
-    )
-    # Sfarsitul intervalului - temp la frontiera valida (0)
-    self.assertEqual(
-        analyze_status([0, -60, -70, -80, -90, -100], -55),
-        (-66.67, 1)
-    )
-    # Sfarsitul intervalului - temp la frontiera superioara (1)
-    self.assertEqual(
-        analyze_status([1, -60, -70, -80, -90, -100], -55),
-        "Sensor failure!"
-    )
+    /* Test pentru lungime 7 */
+    result = analyze_status([-60]*7, -55);
+    Assert.Equal("Exactly 6 temperature readings are required", result);
+
+    /* Test pentru prag -50 - epsilon */
+    (average, critical) = analyze_status([-60]*6, -50.0001);
+    Assert.Equal(-60.0, average);
+    Assert.Equal(0, critical);
+
+    /* Test pentru prag -50 */
+    (average, critical) = analyze_status([-60]*6, -50.0);
+    Assert.Equal(-60.0, average);
+    Assert.Equal(0, critical);
+
+    /* Test pentru prag -50 + epsilon */
+    result = analyze_status([-60]*6, -49.9999);
+    Assert.Equal("Alert threshold must be less than or equal to -50", result);
+
+    /* Test pentru temp -150 - epsilon */
+    result = analyze_status([-150.0001, -60, -70, -80, -90, -100], -55);
+    Assert.Equal("Sensor failure!", result);
+
+    /* Test pentru temp -150 */
+    (average, critical) = analyze_status([-150.0, -60, -70, -80, -90, -100], -55);
+    Assert.Equal(-91.67, average);
+    Assert.Equal(0, critical);
+
+    /* Test pentru temp -150 + epsilon */
+    (average, critical) = analyze_status([-149.9999, -60, -70, -80, -90, -100], -55);
+    Assert.Equal(-91.67, average);
+    Assert.Equal(0, critical);
+
+    /* Test pentru temp -epsilon */
+    (average, critical) = analyze_status([-0.0001, -60, -70, -80, -90, -100], -55);
+    Assert.Equal(-66.83, average);
+    Assert.Equal(1, critical);
+
+    /* Test pentru temp 0 */
+    (average, critical) = analyze_status([0.0, -60, -70, -80, -90, -100], -55);
+    Assert.Equal(-66.67, average);
+    Assert.Equal(1, critical);
+
+    /* Test pentru temp +epsilon */
+    result = analyze_status([0.0001, -60, -70, -80, -90, -100], -55);
+    Assert.Equal("Sensor failure!", result);
+}
 ```
 
----
+### 3. Category Partitioning
 
-#### Codul complet al fisierului black_box_tests.py
+1. Descompune specificatia în unități: avem o singură unitate.
+2. Identifică parametrii: temperatures (t), alert_threshold (a).
+3. Categorii:
+    * t $\rightarrow$ daca lista are exact 6 elemente si toate in [-150, 0].
+    * a $\rightarrow$ daca este <= -50.
+4. Partiționeaza fiecare categorie în alternative:
+    * t: lungime !=6, lungime=6 dar valori invalide, lungime=6 si valori valide.
+    * a: > -50, <= -50.
+5. Scrie specificația de testare:
+    * temperatures:
+        - $\lbrace t | len(t) \neq 6 \rbrace$.
+        - $len(t)=6$ si $\exists t_i \notin [-150, 0]$.
+        - $len(t)=6$ si $\forall t_i \in [-150, 0]$.
+    * alert_threshold:
+        - $a > -50$.
+        - $a \leq -50$.
+
+Se observa ca pentru a testa toate categoriile vom avea nevoie de 3 $\cdot$ 2 = 6 teste.
+
+| Intrari (t, a) | Expected |
+| :---------: | :-----------: |
+| $(5 temperaturi, -55)$ | "Exactly 6 temperature readings are required" |
+| $(7 temperaturi, -55)$ | "Exactly 6 temperature readings are required" |
+| $(6 temperaturi invalide, -55)$ | "Sensor failure!" |
+| $(6 temperaturi valide, -40)$ | "Alert threshold must be less than or equal to -50" |
+| $(6 temperaturi valide, -50)$ | (-60.0, 0) |
+| $(6 temperaturi valide, -70)$ | (-60.0, 6) |
 
 ```python
-import unittest
-from function import analyze_status
+def test_category_partitioning(self):
+    /* Lungime !=6 */
+    var result = analyze_status([-60]*5, -55);
+    Assert.Equal("Exactly 6 temperature readings are required", result);
 
-# TESTARE FUNCTIONALA (BLACK BOX TESTING)
+    result = analyze_status([-60]*7, -55);
+    Assert.Equal("Exactly 6 temperature readings are required", result);
 
-class TestBlackBox(unittest.TestCase):
+    /* Lungime=6 dar valori invalide */
+    result = analyze_status([-160, -60, -70, -80, -90, -100], -55);
+    Assert.Equal("Sensor failure!", result);
 
-    # partitionare in clase de echivalenta
+    /* Prag invalid */
+    result = analyze_status([-60]*6, -40);
+    Assert.Equal("Alert threshold must be less than or equal to -50", result);
 
-    """
-    1. Lungimea listei de temperaturi
-    L1: lungime valida (6 elemente)
-    L2: lungime prea mica (<6 elem; returneaza mesaj de eroare)
-    L3: lungime prea mare (>6 elem; returneaza mesaj de eroare)
+    /* Valide */
+    var (average, critical) = analyze_status([-60]*6, -50);
+    Assert.Equal(-60.0, average);
+    Assert.Equal(0, critical);
 
-    2. Valoarea pragului de alerta
-    A1: prag valid (<= -50)
-    A2: prag invalid (> -50; returneaza mesaj de eroare)
+    (average, critical) = analyze_status([-60]*6, -70);
+    Assert.Equal(-60.0, average);
+    Assert.Equal(6, critical);
+}
+```
 
-    3. Valorile temperaturilor
-    T1: toate valorile sunt valide (-150 <= t <= 0)
-    T2: cel putin o valoare prea mica (t < -150  returneaza mesaj de eroare)
-    T3: cel putin o valoare prea mare (t > 0  returneaza mesaj de eroare)
-    
-    """
+## Structural Testing
 
-    def test_equivalence_partitioning(self):
-        # L1, A1, T1 - test valid
-        self.assertEqual(analyze_status([-80, -60, -70, -80, -90, -100], -72), (-80.0, 2))
+Structural testing, cunoscuta si ca white-box testing, se concentreaza pe verificarea interna a codului sursa. Practic, se testeaza structura logica a programului si se asigura ca toate partile acestuia functioneaza conform asteptarilor.
+
+![Control-flow graph](graf_tss2.jpg)
+
+```python
+def analyze_status(temperatures, alert_threshold):
+    if len(temperatures) != 6:                                      #1
+        return "Exactly 6 temperature readings are required"        #2
+
+    if alert_threshold > -50:                                       #3
+        return "Alert threshold must be less than or equal to -50"  #4
+
+    sum = 0                                                         #5
+    critical_count = 0                                              #6
+
+    for t in temperatures:                                          #7
+        if t >= -150 and t <= 0:                                    #8
+           sum += t                                                 #9  
+           if t > alert_threshold:                                  #10
+            critical_count += 1                                     #11
+        else: 
+            return "Sensor failure!"                                #12
         
-        # L2
-        self.assertEqual(analyze_status([-60]*5, -55), "Exactly 6 temperature readings are required")
-        # L3
-        self.assertEqual(analyze_status([-60]*7, -55), "Exactly 6 temperature readings are required")
-        # L1, A2
-        self.assertEqual(analyze_status([-60]*6, -40), "Alert threshold must be less than or equal to -50")
-        # L1, A1, T2
-        self.assertEqual(analyze_status([-160, -55, -70, -80, -90, -100], -55), "Sensor failure!")
-        # L1, A1, T3
-        self.assertEqual(analyze_status([-60, 10, -70, -80, -90, -100], -55), "Sensor failure!")
+    average = round(sum / len(temperatures), 2)                     #13
+    return (average, critical_count)                                #14
+```
 
-        # L1, A1, T1 - nicio temperatura critica
-        self.assertEqual(analyze_status([-60]*6, -55), (-60.0, 0))
-        # L1, A1, T1 - toate temperaturile sunt critice
-        self.assertEqual(analyze_status([-60]*6, -70), (-60.0, 6))
+### 4. Statement Testing
 
-    #analiza valorilor de frontiera
+Verificam daca fiecare instructiune din cod a fost executata cel putin o data.
 
-    """
-    frontiere lungimea listei: 5, 6, 7
-    frontiere prag de alerta: -51, -50, -49
-    frontiere valori temperaturi: -151, -150, -149, -1, 0, 1
-    
-    """
+| Intrari (t, a) | Expected | Instructiuni acoperite |
+| :---------: | :-----------: | :-----------: |
+| $(5 temperaturi, -55)$ | "Exactly 6 temperature readings are required" | 1,2 |
+| $(6 temperaturi, -40)$ | "Alert threshold must be less than or equal to -50" | 1,3,4 |
+| $([-160, ...], -55)$ | "Sensor failure!" | 1,3,5,6,7,8,12 |
+| $([-80, -60, -70, -80, -90, -100], -72)$ | (-80.0, 2) | 1,3,5,6,7,8,9,10,11,13,14 |
 
-    def test_boundary_values(self):
-        # frontiere lungimea listei
+```python
+def test_statement_coverage(self):
+    // Test pentru lungime invalida
+    var result = analyze_status([-60]*5, -55);
+    Assert.Equal("Exactly 6 temperature readings are required", result);
 
-        #lungime la frontiera inferioara(5 elem)
-        self.assertEqual(analyze_status([-60]*5, -55), "Exactly 6 temperature readings are required")
-        #lungime la frontiera valida(6 elem)
-        self.assertEqual(analyze_status([-60]*6, -55), (-60.0, 0))
-        #lungime la frontiera superioara(7 elem)
-        self.assertEqual(analyze_status([-60]*7, -55), "Exactly 6 temperature readings are required")
+    // Test pentru prag invalid
+    result = analyze_status([-60]*6, -40);
+    Assert.Equal("Alert threshold must be less than or equal to -50", result);
 
-        # frontiere prag de alerta
+    // Test pentru temperatura invalida
+    result = analyze_status([-160, -55, -70, -80, -90, -100], -55);
+    Assert.Equal("Sensor failure!", result);
 
-        #prag la frontiera inferioara(-51)
-        self.assertEqual(analyze_status([-60]*6, -51), (-60.0, 0))
-        #prag la frontiera valida(-50)
-        self.assertEqual(analyze_status([-60]*6, -50), (-60.0, 0))
-        #prag la frontiera superioara(-49)
-        self.assertEqual(analyze_status([-60]*6, -49), "Alert threshold must be less than or equal to -50")
+    // Test pentru caz valid
+    var (average, critical) = analyze_status([-80, -60, -70, -80, -90, -100], -72);
+    Assert.Equal(-80.0, average);
+    Assert.Equal(2, critical);
+}
+```
 
-        # frontiere valori temperaturi
+### 5. Decision Testing
 
-        #inceputul intervalului - temp la frontiera inferioara(-151)
-        self.assertEqual(analyze_status([-151, -60, -70, -80, -90, -100], -55), "Sensor failure!")
-        #inceputul intervalului - temp la frontiera inferioara(-150)
-        self.assertEqual(analyze_status([-150, -60, -70, -80, -90, -100], -55), (-91.67, 0))
-        #inceputul intervalului - temp la frontiera superioara(-149)
-        self.assertEqual(analyze_status([-149, -60, -70, -80, -90, -100], -55), (-91.5, 0))
-        #sfarsitul intervalului - temp la frontiera inferioara(-1)
-        self.assertEqual(analyze_status([-1, -60, -70, -80, -90, -100], -55), (-66.83, 1))
-        #sfarsitul intervalului - temp la frontiera superioara(0)
-        self.assertEqual(analyze_status([0, -60, -70, -80, -90, -100], -55), (-66.67, 1))
-        #sfarsitul intervalului - temp la frontiera superioara(1)
-        self.assertEqual(analyze_status([1, -60, -70, -80, -90, -100], -55), "Sensor failure!")
+Asiguram ca fiecare punct de decizie este evaluat atat pentru adevarat cat si pentru fals.
 
+| Nr. | Decizie |
+|-----|---------------------------------------------------------------------------------------|
+| 1   | `if len(temperatures) != 6` |
+| 2   | `if alert_threshold > -50` |
+| 3   | `if t >= -150 and t <= 0` |
+| 4   | `if t > alert_threshold` |
 
-if __name__ == "__main__":
-    unittest.main()
+| Test | temperatures | alert_threshold | Rezultatul | Decizii acoperite |
+|------|--------------|-----------------|------------|-------------------|
+| T1   | 5 elem | -55 | eroare lungime | D1-true |
+| T2   | 6 elem | -40 | eroare prag | D1-false, D2-true |
+| T3   | 6 elem, temp invalida | -55 | eroare senzor | D1-false, D2-false, D3-false |
+| T4   | 6 elem valide | -72 | (average, critical) | D1-false, D2-false, D3-true, D4-true/false |
+
+```python
+def test_decision_coverage(self):
+    // D1-true
+    var result = analyze_status([-60]*5, -55);
+    Assert.Equal("Exactly 6 temperature readings are required", result);
+
+    // D2-true
+    result = analyze_status([-60]*6, -40);
+    Assert.Equal("Alert threshold must be less than or equal to -50", result);
+
+    // D3-false
+    result = analyze_status([-160, -55, -70, -80, -90, -100], -55);
+    Assert.Equal("Sensor failure!", result);
+
+    // D3-true, D4
+    var (average, critical) = analyze_status([-80, -60, -70, -80, -90, -100], -72);
+    Assert.Equal(-80.0, average);
+    Assert.Equal(2, critical);
+}
+```
+
+### 6. Condition Testing
+
+Se concentreaza pe evaluarea fiecarei conditii individuale.
+
+| Nr. | Decizie | Conditii individuale |
+|----|------------------------------------------------------------------------------------|-----------------------------------------------------|
+| 1 | `if len(temperatures) != 6` | `len(temperatures) != 6` |
+| 2 | `if alert_threshold > -50` | `alert_threshold > -50` |
+| 3 | `if t >= -150 and t <= 0` | `t >= -150`, `t <= 0` |
+| 4 | `if t > alert_threshold` | `t > alert_threshold` |
+
+| Test | temperatures | alert_threshold | Rezultatul | Conditii acoperite |
+|------|--------------|-----------------|------------|-------------------|
+| T1   | 5 elem | -55 | eroare lungime | C1-true |
+| T2   | 6 elem | -40 | eroare prag | C1-false, C2-true |
+| T3   | 6 elem, temp invalida | -55 | eroare senzor | C1-false, C2-false, C3.1-false |
+| T4   | 6 elem valide | -72 | (average, critical) | C1-false, C2-false, C3.1-true, C3.2-true, C4 |
+
+```python
+def test_condition_coverage(self):
+    // C1-true
+    var result = analyze_status([-60]*5, -55);
+    Assert.Equal("Exactly 6 temperature readings are required", result);
+
+    // C2-true
+    result = analyze_status([-60]*6, -40);
+    Assert.Equal("Alert threshold must be less than or equal to -50", result);
+
+    // C3.1-false
+    result = analyze_status([-160, -55, -70, -80, -90, -100], -55);
+    Assert.Equal("Sensor failure!", result);
+
+    // C3.1-true, C3.2-true, C4
+    var (average, critical) = analyze_status([-80, -60, -70, -80, -90, -100], -72);
+    Assert.Equal(-80.0, average);
+    Assert.Equal(2, critical);
+}
+```
+
+### 7. Circuit Coverage
+
+Identificam setul de cai liniar independente (circuitelor) pentru functia `analyze_status` pe baza grafului de control-flow. Adaugand arcele necesare pentru a obtine un graf complet conectat, obtinem urmatoarele valori (conform analizei din `white_box_tests.py`):
+
+- numarul de noduri: `n = 13`
+- numarul de muchii: `e = 18`
+- componente conexe: `p = 1`
+
+Folosind formula pentru complexitatea ciclotomica a subrutinei (metodei) considerata in testele noastre: `V(G) = e - n + 1`, rezulta `V(G) = 18 - 13 + 1 = 6` circuite independente.
+
+Aceste 6 circuite (descrise succint) sunt:
+* Calea 1 (Eroare lungime): `1 --> 2 --> 1`
+* Calea 2 (Eroare prag alerta): `1 --> 3 --> 4 --> 1`
+* Calea 3 (iteratie in for, temperatura <= prag): `7 --> 8 --> 9 --> 10 --> 7`
+* Calea 4 (iteratie in for, temperatura > prag): `7 --> 8 --> 9 --> 10 --> 11 --> 7`
+* Calea 5 (returneaza valori valide): `1 --> 3 --> 5/6 --> 7 --> 14/15 --> 16 --> 1`
+* Calea 6 (eroare senzor): `1 --> 3 --> 5/6 --> 7 --> 8 --> 12/13 --> 1`
+
+Testele corespunzatoare (folosind aceleasi intrari si asteptari ca in `white_box_tests.py`) sunt:
+
+| Intrari (t, a) | Expected | Circuitul |
+| :---------: | :-----------: | :-----------: |
+| `([-60]*5, -55)` | `"Exactly 6 temperature readings are required"` | Calea 1 |
+| `([-60]*6, -40)` | `"Alert threshold must be less than or equal to -50"` | Calea 2 |
+| `([-61, -60, -60, -60, -60, -60], -60)` | `(-60.17, 0)` | Calea 3 |
+| `([-30]*6, -60)` | `(-30.0, 6)` | Calea 4 |
+| `([-59, -61, -60, -60, -60, -60], -60)` | `(-60.0, 1)` | Calea 5 |
+| `([-160, -61, -60, -60, -60, -60], -60)` | `"Sensor failure!"` | Calea 6 |
+
+Exemplu de test (unittest) pentru acoperirea circuitelor independente:
+
+```python
+def test_independent_paths(self):
+    # Calea 1 (Eroare Lungime)
+    self.assertEqual(analyze_status([-60]*5, -55), "Exactly 6 temperature readings are required")
+
+    # Calea 2 (Eroare Prag)
+    self.assertEqual(analyze_status([-60]*6, -40), "Alert threshold must be less than or equal to -50")
+
+    # Calea 3 (iteratie in for - temperatura <= prag alerta)
+    self.assertEqual(analyze_status([-61, -60, -60, -60, -60, -60], -60), (-60.17, 0))
+
+    # Calea 4 (iteratie in for - temperatura > prag alerta)
+    self.assertEqual(analyze_status([-30]*6, -60), (-30.0, 6))
+
+    # Calea 5 (returneaza valori valide)
+    self.assertEqual(analyze_status([-59, -61, -60, -60, -60, -60], -60), (-60.0, 1))
+
+    # Calea 6 (Eroare Senzor)
+    self.assertEqual(analyze_status([-160, -61, -60, -60, -60, -60], -60), "Sensor failure!")
 ```
 
 
 
 
+
+## Mutation Testing
+
+Pentru testarea prin mutanti am folosit tool-ul `cosmic-ray`.
+
+Rezultatul rundei de mutatie este in fisierul de raport `report.html` si indica **0 surviving mutants** (toti mutanti generati au fost detectati/"ucisi" de suitele de teste).
+
+Concluzie: setul actual de teste ofera acoperire buna impotriva mutatiilor generate pentru modulele analizate.
 
 
 
