@@ -36,7 +36,9 @@ Serviciul ar trebui:
 
 ## Demo
 
-[![Demo](https://img.youtube.com/vi/placeholder/0.jpg)](https://www.youtube.com/watch?v=placeholder)
+[![Demo video](https://img.youtube.com/vi/YbfVEBK7Q-g/0.jpg)](https://youtu.be/YbfVEBK7Q-g)
+
+Link direct: https://youtu.be/YbfVEBK7Q-g
 
 ## Functional Testing
 
@@ -306,7 +308,7 @@ def test_statement_coverage(self):
 
 ### 5. Decision Testing
 
-Asiguram ca fiecare punct de decizie este evaluat atat pentru adevarat cat si pentru fals.
+Ne asiguram ca fiecare punct de decizie este evaluat atat pentru atat pentru conditia adevarata, cat si pentru cea falsa.
 
 | Nr. | Decizie |
 |-----|---------------------------------------------------------------------------------------|
@@ -449,3 +451,23 @@ Concluzie: setul actual de teste ofera acoperire buna impotriva mutatiilor gener
 
 
 
+
+---
+
+## Referinte bibliografice
+
+
+[1] Python Software Foundation. (2024). "unittest - Unit testing framework". Python Documentation. https://docs.python.org/3/library/unittest.html
+
+[2] Ned Batchelder. (2024). "Coverage.py - Code coverage measurement for Python". https://coverage.readthedocs.io/
+
+[3] Cosmic Ray Contributors. (2024). "Cosmic Ray - Mutation testing for Python". https://cosmic-ray.readthedocs.io/
+
+
+[5] Ammann, P., & Offutt, J. (2017). "Introduction to Software Testing" (2nd ed.). Cambridge University Press. ISBN: 978-1-108-10099-1
+
+[15] Git Contributors. (2024). "Git - Version Control System". https://git-scm.com/
+
+[16] Microsoft. (2024). "Visual Studio Code - Code Editor". https://code.visualstudio.com/
+
+[17] Google AI. (2024). "Gemini - AI-powered code assistant". https://gemini.google.com/
