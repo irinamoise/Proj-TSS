@@ -449,7 +449,19 @@ Rezultatul rundei de mutatie este in fisierul de raport `report.html` si indica 
 Concluzie: setul actual de teste ofera acoperire buna impotriva mutatiilor generate pentru modulele analizate.
 
 
+## Test Results & Quality Metrics
 
+### Coverage Report
+
+![Coverage report for function.py](coverage_report.png)
+
+Raportul de acoperire arata **100% coverage** pentru `function.py`, ceea ce inseamna ca toate instructiunile, branching-urile si conditiile din cod au fost executate in teste.
+
+### Cosmic Ray Report
+
+![Cosmic Ray mutation testing report](cosmic_ray_report.png)
+
+Raportul de testare prin mutanti (Cosmic Ray) confirma ca suita de teste este foarte eficace. Cu **0 surviving mutants** din 72 mutanti generati, rezultatul arata ca fiecare modificare (mutatie) introdusa in cod a fost detectata de cel putin un test. Aceasta validare garanteaza ca testele sunt suficient de robuste pentru a gasi erorile potentiale in implementare.
 
 
 ---
