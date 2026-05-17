@@ -390,7 +390,7 @@ Identificam setul de cai liniar independente (circuitelor) pentru functia `analy
 - numarul de muchii: `e = 18`
 - componente conexe: `p = 1`
 
-Folosind formula pentru complexitatea ciclotomica a subrutinei (metodei) considerata in testele noastre: `V(G) = e - n + 1`, rezulta `V(G) = 18 - 13 + 1 = 6` circuite independente.
+Folosind formula pentru complexitatea ciclomatica a subrutinei (metodei) considerata in testele noastre: `V(G) = e - n + 1`, rezulta `V(G) = 18 - 13 + 1 = 6` circuite independente.
 
 Aceste 6 circuite (descrise succint) sunt:
 * Calea 1 (Eroare lungime): `1 --> 2 --> 1`
