@@ -74,23 +74,24 @@ Clasele de echivalenta globale astfel obtinute sunt:
 
 ```python
 def test_equivalence_partitioning(self):
-    /* Testul T1. */
-    var result = analyze_status([1,2,3,4,5], -55);
-    Assert.Equal("Exactly 6 temperature readings are required", result);
+    # L1, A1, T1 - test valid (O2)
+    self.assertEqual(analyze_status([-80, -60, -70, -80, -90, -100], -72), (-80.0, 2))
+    
+    # L2
+    self.assertEqual(analyze_status([-60]*5, -55), "Exactly 6 temperature readings are required")
+    # L3
+    self.assertEqual(analyze_status([-60]*7, -55), "Exactly 6 temperature readings are required")
+    # L1, A2
+    self.assertEqual(analyze_status([-60]*6, -40), "Alert threshold must be less than or equal to -50")
+    # L1, A1, T2
+    self.assertEqual(analyze_status([-160, -55, -70, -80, -90, -100], -55), "Sensor failure!")
+    # L1, A1, T3
+    self.assertEqual(analyze_status([-60, 10, -70, -80, -90, -100], -55), "Sensor failure!")
 
-    /* Testul T2. */
-    result = analyze_status([-60]*6, -40);
-    Assert.Equal("Alert threshold must be less than or equal to -50", result);
-
-    /* Testul T3. */
-    result = analyze_status([-160, -55, -70, -80, -90, -100], -55);
-    Assert.Equal("Sensor failure!", result);
-
-    /* Testul T4. */
-    var (average, critical) = analyze_status([-80, -60, -70, -80, -90, -100], -72);
-    Assert.Equal(-80.0, average);
-    Assert.Equal(2, critical);
-}
+    # L1, A1, T1 - nicio temperatura critica (O1)
+    self.assertEqual(analyze_status([-60]*6, -55), (-60.0, 0))
+    # L1, A1, T1 - toate temperaturile sunt critice (O3)
+    self.assertEqual(analyze_status([-60]*6, -70), (-60.0, 6))
 ```
 
 ### 2. Analiza valorilor de frontiera
@@ -130,61 +131,38 @@ Astfel, avem urmatoarele teste:
 
 ```python
 def test_boundary_values(self):
-    /* Test pentru lungime 5 */
-    var result = analyze_status([-60]*5, -55);
-    Assert.Equal("Exactly 6 temperature readings are required", result);
+    # frontiere lungimea listei
 
-    /* Test pentru lungime 6 */
-    var (average, critical) = analyze_status([-60]*6, -55);
-    Assert.Equal(-60.0, average);
-    Assert.Equal(0, critical);
+    #lungime la frontiera inferioara(5 elem)
+    self.assertEqual(analyze_status([-60]*5, -55), "Exactly 6 temperature readings are required")
+    #lungime la frontiera valida(6 elem)
+    self.assertEqual(analyze_status([-60]*6, -55), (-60.0, 0))
+    #lungime la frontiera superioara(7 elem)
+    self.assertEqual(analyze_status([-60]*7, -55), "Exactly 6 temperature readings are required")
 
-    /* Test pentru lungime 7 */
-    result = analyze_status([-60]*7, -55);
-    Assert.Equal("Exactly 6 temperature readings are required", result);
+    # frontiere prag de alerta
 
-    /* Test pentru prag -50 - epsilon */
-    (average, critical) = analyze_status([-60]*6, -50.0001);
-    Assert.Equal(-60.0, average);
-    Assert.Equal(0, critical);
+    #prag la frontiera inferioara(-50.0001)
+    self.assertEqual(analyze_status([-60]*6, -50.0001), (-60.0, 0))
+    #prag la frontiera valida(-50.0)
+    self.assertEqual(analyze_status([-60]*6, -50.0), (-60.0, 0))
+    #prag la frontiera superioara(-49.9999)
+    self.assertEqual(analyze_status([-60]*6, -49.9999), "Alert threshold must be less than or equal to -50")
 
-    /* Test pentru prag -50 */
-    (average, critical) = analyze_status([-60]*6, -50.0);
-    Assert.Equal(-60.0, average);
-    Assert.Equal(0, critical);
+    # frontiere valori temperaturi
 
-    /* Test pentru prag -50 + epsilon */
-    result = analyze_status([-60]*6, -49.9999);
-    Assert.Equal("Alert threshold must be less than or equal to -50", result);
-
-    /* Test pentru temp -150 - epsilon */
-    result = analyze_status([-150.0001, -60, -70, -80, -90, -100], -55);
-    Assert.Equal("Sensor failure!", result);
-
-    /* Test pentru temp -150 */
-    (average, critical) = analyze_status([-150.0, -60, -70, -80, -90, -100], -55);
-    Assert.Equal(-91.67, average);
-    Assert.Equal(0, critical);
-
-    /* Test pentru temp -150 + epsilon */
-    (average, critical) = analyze_status([-149.9999, -60, -70, -80, -90, -100], -55);
-    Assert.Equal(-91.67, average);
-    Assert.Equal(0, critical);
-
-    /* Test pentru temp -epsilon */
-    (average, critical) = analyze_status([-0.0001, -60, -70, -80, -90, -100], -55);
-    Assert.Equal(-66.83, average);
-    Assert.Equal(1, critical);
-
-    /* Test pentru temp 0 */
-    (average, critical) = analyze_status([0.0, -60, -70, -80, -90, -100], -55);
-    Assert.Equal(-66.67, average);
-    Assert.Equal(1, critical);
-
-    /* Test pentru temp +epsilon */
-    result = analyze_status([0.0001, -60, -70, -80, -90, -100], -55);
-    Assert.Equal("Sensor failure!", result);
-}
+    #inceputul intervalului - temp la frontiera inferioara(-150.0001)
+    self.assertEqual(analyze_status([-150.0001, -60, -70, -80, -90, -100], -55), "Sensor failure!")
+    #inceputul intervalului - temp la frontiera valida(-150.0)
+    self.assertEqual(analyze_status([-150.0, -60, -70, -80, -90, -100], -55), (-91.67, 0))
+    #inceputul intervalului - temp la frontiera superioara(-149.9999)
+    self.assertEqual(analyze_status([-149.9999, -60, -70, -80, -90, -100], -55), (-91.67, 0))
+    #sfarsitul intervalului - temp la frontiera inferioara(-0.0001)
+    self.assertEqual(analyze_status([-0.0001, -60, -70, -80, -90, -100], -55), (-66.67, 1))
+    #sfarsitul intervalului - temp la frontiera valida(0.0)
+    self.assertEqual(analyze_status([0.0, -60, -70, -80, -90, -100], -55), (-66.67, 1))
+    #sfarsitul intervalului - temp la frontiera superioara(0.0001)
+    self.assertEqual(analyze_status([0.0001, -60, -70, -80, -90, -100], -55), "Sensor failure!")
 ```
 
 ## Structural Testing
@@ -229,22 +207,18 @@ Verificam daca fiecare instructiune din cod a fost executata cel putin o data.
 
 ```python
 def test_statement_coverage(self):
-    // Test pentru lungime invalida
-    var result = analyze_status([-60]*5, -55);
-    Assert.Equal("Exactly 6 temperature readings are required", result);
 
-    // Test pentru prag invalid
-    result = analyze_status([-60]*6, -40);
-    Assert.Equal("Alert threshold must be less than or equal to -50", result);
+    # instruct 1, 2 <-- lungime lista invalida
+    self.assertEqual(analyze_status([-60]*5, -55), "Exactly 6 temperature readings are required")
+    
+    # (1), 3, 4 <-- prag de alerta invalid
+    self.assertEqual(analyze_status([-60]*6, -40), "Alert threshold must be less than or equal to -50")
 
-    // Test pentru temperatura invalida
-    result = analyze_status([-160, -55, -70, -80, -90, -100], -55);
-    Assert.Equal("Sensor failure!", result);
-
-    // Test pentru caz valid
-    var (average, critical) = analyze_status([-80, -60, -70, -80, -90, -100], -72);
-    Assert.Equal(-80.0, average);
-    Assert.Equal(2, critical);
+    # (1, 3), 5, 6, 7, 8, 9, 10, 11, 14, 15, 16 <-- returneaza media si numarul de valori critice
+    self.assertEqual(analyze_status([-60]*6, -70), (-60.0, 6))
+    
+    # (1, 3, 5, 6, 7, 8), 12, 13 <-- temperatura invalida
+    self.assertEqual(analyze_status([-160, -55, -70, -80, -90, -100], -55), "Sensor failure!")
 }
 ```
 
@@ -268,22 +242,18 @@ Ne asiguram ca fiecare punct de decizie este evaluat atat pentru atat pentru con
 
 ```python
 def test_decision_coverage(self):
-    // D1-true
-    var result = analyze_status([-60]*5, -55);
-    Assert.Equal("Exactly 6 temperature readings are required", result);
+    # decizia 1 adevarata:  1 --> 2
+    self.assertEqual(analyze_status([-60]*5, -55) , "Exactly 6 temperature readings are required")
 
-    // D2-true
-    result = analyze_status([-60]*6, -40);
-    Assert.Equal("Alert threshold must be less than or equal to -50", result);
+    # decizia 1 falsa, decizia 2 adevarata: ramura 1 --> 3 --> 4
+    self.assertEqual(analyze_status([-60]*6, -40), "Alert threshold must be less than or equal to -50")
+    
+    # decizia 1 falsa, decizia 2 falsa, decizia 3 adevarata de 6 ori, apoi falsa, decizia 4 adevarata, 
+    # decizia 5 adevarata prima oara, apoi falsa: ramura 1 -- 3 --> 5--> 6 --> 7 --> 8--> 9 --> 10 --> 11 --> 14 --> 15 --> 16
+    self.assertEqual(analyze_status([-59, -61, -60, -60, -60, -60], -60), (-60.0, 1))
 
-    // D3-false
-    result = analyze_status([-160, -55, -70, -80, -90, -100], -55);
-    Assert.Equal("Sensor failure!", result);
-
-    // D3-true, D4
-    var (average, critical) = analyze_status([-80, -60, -70, -80, -90, -100], -72);
-    Assert.Equal(-80.0, average);
-    Assert.Equal(2, critical);
+    # decizia 1 falsa, decizia 2 falsa, decizia 3 adevarata o data, decizia 4 falsa: ramura 1 -- 3 -- 5 -- 6 -- 7 -- 8 --> 12 --> 13
+    self.assertEqual(analyze_status([-160, -100, -70, -80, -90, -100], -55), "Sensor failure!")
 }
 ```
 
@@ -307,22 +277,21 @@ Se concentreaza pe evaluarea fiecarei conditii individuale.
 
 ```python
 def test_condition_coverage(self):
-    // C1-true
-    var result = analyze_status([-60]*5, -55);
-    Assert.Equal("Exactly 6 temperature readings are required", result);
+    # conditia 1 adevarata 
+    self.assertEqual(analyze_status([-60]*5, -55) , "Exactly 6 temperature readings are required")
 
-    // C2-true
-    result = analyze_status([-60]*6, -40);
-    Assert.Equal("Alert threshold must be less than or equal to -50", result);
+    # conditia 1 falsa, conditia 2 adevarata
+    self.assertEqual(analyze_status([-60]*6, -40), "Alert threshold must be less than or equal to -50")
 
-    // C3.1-false
-    result = analyze_status([-160, -55, -70, -80, -90, -100], -55);
-    Assert.Equal("Sensor failure!", result);
+    # _ , _ , conditia 3 adevarata de 6 ori, apoi falsa, conditia 4 adevarata, coditia 5 adevarata, 
+    # conditia 6 adevarata prima oara, apoi falsa 
+    self.assertEqual(analyze_status([-59, -61, -60, -60, -60, -60], -60), (-60.0, 1))
 
-    // C3.1-true, C3.2-true, C4
-    var (average, critical) = analyze_status([-80, -60, -70, -80, -90, -100], -72);
-    Assert.Equal(-80.0, average);
-    Assert.Equal(2, critical);
+    # _, _, conditia 3 adevarata o data, conditia 4 falsa 
+    self.assertEqual(analyze_status([-160, -61, -60, -60, -60, -60], -60), "Sensor failure!")
+
+    # _, _, conditia 3 adevarata o data, conditia 4 adevarata, conditia 5 falsa
+    self.assertEqual(analyze_status([10, -61, -60, -60, -60, -60], -60), "Sensor failure!")
 }
 ```
 
