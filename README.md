@@ -187,64 +187,6 @@ def test_boundary_values(self):
 }
 ```
 
-### 3. Category Partitioning
-
-1. Descompune specificatia în unități: avem o singură unitate.
-2. Identifică parametrii: temperatures (t), alert_threshold (a).
-3. Categorii:
-    * t $\rightarrow$ daca lista are exact 6 elemente si toate in [-150, 0].
-    * a $\rightarrow$ daca este <= -50.
-4. Partiționeaza fiecare categorie în alternative:
-    * t: lungime !=6, lungime=6 dar valori invalide, lungime=6 si valori valide.
-    * a: > -50, <= -50.
-5. Scrie specificația de testare:
-    * temperatures:
-        - $\lbrace t | len(t) \neq 6 \rbrace$.
-        - $len(t)=6$ si $\exists t_i \notin [-150, 0]$.
-        - $len(t)=6$ si $\forall t_i \in [-150, 0]$.
-    * alert_threshold:
-        - $a > -50$.
-        - $a \leq -50$.
-
-Se observa ca pentru a testa toate categoriile vom avea nevoie de 3 $\cdot$ 2 = 6 teste.
-
-| Intrari (t, a) | Expected |
-| :---------: | :-----------: |
-| $(5 temperaturi, -55)$ | "Exactly 6 temperature readings are required" |
-| $(7 temperaturi, -55)$ | "Exactly 6 temperature readings are required" |
-| $(6 temperaturi invalide, -55)$ | "Sensor failure!" |
-| $(6 temperaturi valide, -40)$ | "Alert threshold must be less than or equal to -50" |
-| $(6 temperaturi valide, -50)$ | (-60.0, 0) |
-| $(6 temperaturi valide, -70)$ | (-60.0, 6) |
-
-```python
-def test_category_partitioning(self):
-    /* Lungime !=6 */
-    var result = analyze_status([-60]*5, -55);
-    Assert.Equal("Exactly 6 temperature readings are required", result);
-
-    result = analyze_status([-60]*7, -55);
-    Assert.Equal("Exactly 6 temperature readings are required", result);
-
-    /* Lungime=6 dar valori invalide */
-    result = analyze_status([-160, -60, -70, -80, -90, -100], -55);
-    Assert.Equal("Sensor failure!", result);
-
-    /* Prag invalid */
-    result = analyze_status([-60]*6, -40);
-    Assert.Equal("Alert threshold must be less than or equal to -50", result);
-
-    /* Valide */
-    var (average, critical) = analyze_status([-60]*6, -50);
-    Assert.Equal(-60.0, average);
-    Assert.Equal(0, critical);
-
-    (average, critical) = analyze_status([-60]*6, -70);
-    Assert.Equal(-60.0, average);
-    Assert.Equal(6, critical);
-}
-```
-
 ## Structural Testing
 
 Structural testing, cunoscuta si ca white-box testing, se concentreaza pe verificarea interna a codului sursa. Practic, se testeaza structura logica a programului si se asigura ca toate partile acestuia functioneaza conform asteptarilor.
@@ -274,7 +216,7 @@ def analyze_status(temperatures, alert_threshold):
     return (average, critical_count)                                #14
 ```
 
-### 4. Statement Testing
+### 3. Statement Testing
 
 Verificam daca fiecare instructiune din cod a fost executata cel putin o data.
 
@@ -306,7 +248,7 @@ def test_statement_coverage(self):
 }
 ```
 
-### 5. Decision Testing
+### 4. Decision Testing
 
 Ne asiguram ca fiecare punct de decizie este evaluat atat pentru atat pentru conditia adevarata, cat si pentru cea falsa.
 
@@ -345,7 +287,7 @@ def test_decision_coverage(self):
 }
 ```
 
-### 6. Condition Testing
+### 5. Condition Testing
 
 Se concentreaza pe evaluarea fiecarei conditii individuale.
 
@@ -384,7 +326,7 @@ def test_condition_coverage(self):
 }
 ```
 
-### 7. Circuit Coverage
+### 6. Circuit Coverage
 
 Identificam setul de cai liniar independente (circuitelor) pentru functia `analyze_status` pe baza grafului de control-flow. Adaugand arcele necesare pentru a obtine un graf complet conectat, obtinem urmatoarele valori (conform analizei din `white_box_tests.py`):
 
@@ -476,10 +418,12 @@ Raportul de testare prin mutanti (Cosmic Ray) confirma ca suita de teste este fo
 [3] Cosmic Ray Contributors. (2024). "Cosmic Ray - Mutation testing for Python". https://cosmic-ray.readthedocs.io/
 
 
-[5] Ammann, P., & Offutt, J. (2017). "Introduction to Software Testing" (2nd ed.). Cambridge University Press. ISBN: 978-1-108-10099-1
+[4] Ammann, P., & Offutt, J. (2017). "Introduction to Software Testing" (2nd ed.). Cambridge University Press. ISBN: 978-1-108-10099-1
 
-[15] Git Contributors. (2024). "Git - Version Control System". https://git-scm.com/
+[5] Git Contributors. (2024). "Git - Version Control System". https://git-scm.com/
 
-[16] Microsoft. (2024). "Visual Studio Code - Code Editor". https://code.visualstudio.com/
+[6] Microsoft. (2024). "Visual Studio Code - Code Editor". https://code.visualstudio.com/
 
-[17] Google AI. (2024). "Gemini - AI-powered code assistant". https://gemini.google.com/
+[7] Google AI. (2024). "Gemini - AI-powered code assistant". https://gemini.google.com/
+
+[8] Universitatea din Bucuresti, Prof. Sorina Predut, Curs de Testarea sistemelor software - Notite de curs
